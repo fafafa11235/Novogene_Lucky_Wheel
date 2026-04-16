@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Novogene Lucky Wheel</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(180deg, #BFE0FF 0%, #B8F0C0 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── Header ─────────────────────────────────────── */
+    header {
+      width: 100%;
+      padding: 32px 20px 24px;
+      text-align: center;
+      position: relative;   /* needed for absolute children */
+    }
+
+    .title {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #003F76;
+      letter-spacing: 1px;
+    }
+
+    .title em {
+      font-style: normal;
+      color: #1877F2;
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      font-size: 0.85rem;
+      color: rgba(0,63,118,0.55);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* Lock / Exit-Admin button */
+    .lock-btn {
+      position: absolute;
+      top: 50%;
+      right: 20px;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      opacity: 0.35;
+      padding: 6px 8px;
+      border-radius: 8px;
+      transition: opacity 0.18s;
+      line-height: 1;
+    }
+
+    .lock-btn:hover { opacity: 0.8; }
+
+    .lock-btn.admin-mode {
+      opacity: 1;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #e53935;
+      border: 1.5px solid #e53935;
+      border-radius: 6px;
+      padding: 5px 10px;
+    }
+
+    /* Password prompt (absolute, inside header) */
+    .pw-prompt {
+      display: none;
+      position: absolute;
+      top: 50%;
+      right: 20px;
+      transform: translateY(-50%);
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 24px rgba(0,63,118,0.18);
+      padding: 10px 12px;
+      align-items: center;
+      gap: 8px;
+      z-index: 300;
+    }
+
+    .pw-prompt.show { display: flex; }
+
+    .pw-prompt input {
+      padding: 7px 10px;
+      border: 1.5px solid #dde3ea;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      outline: none;
+      width: 160px;
+      font-family: inherit;
+    }
+
+    .pw-prompt input:focus { border-color: #1877F2; }
+
+    .pw-ok {
+      padding: 7px 14px;
+      background: #1877F2;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.18s;
+    }
+
+    .pw-ok:hover { background: #0f60cc; }
+
+    .pw-cancel {
+      padding: 7px 10px;
+      background: transparent;
+      color: #aaa;
+      border: 1.5px solid #dde3ea;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: border-color 0.18s;
+    }
+
+    .pw-cancel:hover { border-color: #aab0bb; color: #666; }
+
+    .pw-error {
+      position: absolute;
+      bottom: -22px;
+      left: 12px;
+      font-size: 0.7rem;
+      color: #e53935;
+      white-space: nowrap;
+    }
+
+    @keyframes shake {
+      0%,100% { transform: translateY(-50%) translateX(0);   }
+      20%      { transform: translateY(-50%) translateX(-7px); }
+      40%      { transform: translateY(-50%) translateX(7px);  }
+      60%      { transform: translateY(-50%) translateX(-4px); }
+      80%      { transform: translateY(-50%) translateX(4px);  }
+    }
+
+    .pw-prompt.shake { animation: shake 0.4s ease; }
+
+    /* ── Main ─────────────────────────────────────── */
+    main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 20px 40px;
+      gap: 26px;
+      width: 100%;
+      max-width: 580px;
+    }
+
+    /* ── Wheel area ─────────────────────────────────── */
+    .wheel-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .pointer-wrap {
+      z-index: 2;
+      position: relative;
+      bottom: -4px;
+      line-height: 0;
+    }
+
+    .pointer-svg {
+      filter: drop-shadow(0 3px 6px rgba(0,63,118,0.30));
+    }
+
+    .canvas-wrap {
+      position: relative;
+      border-radius: 50%;
+      box-shadow:
+        0 12px 40px rgba(0,63,118,0.18),
+        0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    canvas {
+      display: block;
+      border-radius: 50%;
+    }
+
+    /* ── Spin button ─────────────────────────────────── */
+    .spin-btn {
+      margin-top: 4px;
+      padding: 13px 72px;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: white;
+      background: #43B149;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.18s, transform 0.1s, box-shadow 0.18s;
+      box-shadow: 0 4px 16px rgba(67,177,73,0.35);
+    }
+
+    .spin-btn:hover:not(:disabled) {
+      background: #37a03d;
+      box-shadow: 0 6px 22px rgba(67,177,73,0.45);
+    }
+
+    .spin-btn:active:not(:disabled) { transform: scale(0.97); }
+
+    .spin-btn:disabled {
+      background: #b0c4b1;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .spin-btn.hidden { display: none; }
+
+    /* ── Settings card (admin only) ──────────────────── */
+    .settings-card {
+      width: 100%;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 2px 16px rgba(0,63,118,0.10);
+      overflow: hidden;
+    }
+
+    .settings-hd {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      cursor: pointer;
+      user-select: none;
+      background: #f7f9ff;
+      border-bottom: 1px solid #eef1f8;
+    }
+
+    .settings-hd h3 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #003F76;
+      letter-spacing: 0.5px;
+    }
+
+    .chevron {
+      width: 18px; height: 18px;
+      fill: none;
+      stroke: #003F76;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: transform 0.25s;
+    }
+
+    .chevron.open { transform: rotate(180deg); }
+
+    .settings-bd {
+      display: none;
+      padding: 4px 20px 18px;
+      border-top: 1px solid #f0f4f8;
+    }
+
+    .settings-bd.open { display: block; }
+
+    .settings-actions {
+      display: flex;
+      gap: 10px;
+      padding: 12px 0 14px;
+    }
+
+    .btn-add {
+      padding: 7px 18px;
+      background: #1877F2;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: background 0.18s;
+    }
+
+    .btn-add:hover { background: #0f60cc; }
+
+    .btn-reset {
+      padding: 7px 18px;
+      background: transparent;
+      color: #888;
+      border: 1.5px solid #dde3ea;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: border-color 0.18s, color 0.18s;
+    }
+
+    .btn-reset:hover { border-color: #aab0bb; color: #555; }
+
+    /* Column header row */
+    .list-header {
+      display: flex;
+      align-items: center;
+      padding: 0 12px 6px;
+      gap: 10px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #aab;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .lh-num  { width: 26px; flex-shrink: 0; text-align: center; }
+    .lh-name { flex: 1; }
+    .lh-wt   { width: 68px; flex-shrink: 0; text-align: center; }
+    .lh-pct  { width: 48px; flex-shrink: 0; text-align: right; }
+    .lh-del  { width: 24px; flex-shrink: 0; }
+
+    .prize-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .prize-list::-webkit-scrollbar { width: 4px; }
+    .prize-list::-webkit-scrollbar-track { background: #f5f7fa; border-radius: 2px; }
+    .prize-list::-webkit-scrollbar-thumb { background: #d0d8e4; border-radius: 2px; }
+
+    .prize-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: #f7f9fc;
+      border-radius: 8px;
+      border: 1.5px solid #eef1f6;
+      transition: border-color 0.15s;
+    }
+
+    .prize-item:focus-within {
+      border-color: #1877F2;
+      background: #f0f6ff;
+    }
+
+    .color-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .prize-num {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #ccc;
+      flex-shrink: 0;
+      width: 16px;
+      text-align: center;
+    }
+
+    /* Name input */
+    .prize-item .name-inp {
+      flex: 1;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 0.88rem;
+      color: #222;
+      font-family: inherit;
+      min-width: 0;
+    }
+
+    .prize-item .name-inp::placeholder { color: #ccc; }
+
+    /* Weight input */
+    .weight-wrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .wt-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #c0c8d8;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .weight-inp {
+      width: 48px;
+      border: 1.5px solid #dde3ea;
+      border-radius: 5px;
+      padding: 3px 6px;
+      font-size: 0.82rem;
+      color: #333;
+      text-align: center;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+      background: white;
+    }
+
+    .weight-inp:focus { border-color: #1877F2; }
+
+    /* Probability display */
+    .prob-pct {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #1877F2;
+      width: 46px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .del-btn {
+      background: none;
+      border: none;
+      color: #d8d8d8;
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+      line-height: 1;
+      transition: color 0.15s, background 0.15s;
+      flex-shrink: 0;
+    }
+
+    .del-btn:hover { color: #e53935; background: #fff0f0; }
+
+    /* Totals row */
+    .prize-totals {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      padding: 8px 14px;
+      background: #f0f6ff;
+      border-radius: 8px;
+      font-size: 0.76rem;
+      color: #666;
+    }
+
+    .prize-totals strong { color: #003F76; }
+
+    .hint {
+      margin-top: 10px;
+      font-size: 0.72rem;
+      color: #bbb;
+      text-align: center;
+    }
+
+    /* ── Result Modal ─────────────────────────────────── */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,20,50,0.38);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .overlay.show {
+      display: flex;
+      animation: fadein 0.22s ease;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 20px;
+      padding: 44px 52px 40px;
+      text-align: center;
+      box-shadow: 0 24px 64px rgba(0,20,60,0.22);
+      animation: popin 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+      max-width: 360px;
+      width: 90%;
+    }
+
+    .modal-icon   { font-size: 2.4rem; line-height: 1; margin-bottom: 14px; }
+
+    .modal-label  {
+      font-size: 0.78rem; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: #aab; margin-bottom: 10px;
+    }
+
+    .modal-prize  {
+      font-size: 1.85rem; font-weight: 800;
+      color: #003F76; line-height: 1.2;
+      margin-bottom: 30px; word-break: break-word;
+    }
+
+    .modal-close  {
+      padding: 11px 40px;
+      background: #1877F2; color: white;
+      border: none; border-radius: 8px;
+      font-size: 0.92rem; font-weight: 700; letter-spacing: 1px;
+      cursor: pointer; transition: background 0.18s;
+    }
+
+    .modal-close:hover { background: #0f60cc; }
+
+    @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+
+    @keyframes popin {
+      from { transform: scale(0.55); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="title">Novogene <em>Lucky Wheel</em></div>
+  <div class="subtitle">Spin &amp; Win</div>
+
+  <!-- Admin lock button -->
+  <button class="lock-btn" id="lockBtn" onclick="handleLockClick()" title="Admin Settings">🔒</button>
+
+  <!-- Inline password prompt -->
+  <div class="pw-prompt" id="pwPrompt">
+    <input type="password" id="pwInput" placeholder="Admin password"
+           onkeydown="if(event.key==='Enter')checkPassword()">
+    <button class="pw-ok"     onclick="checkPassword()">OK</button>
+    <button class="pw-cancel" onclick="closePwPrompt()">✕</button>
+    <span class="pw-error" id="pwError"></span>
+  </div>
+</header>
+
+<main>
+  <!-- Wheel -->
+  <div class="wheel-area">
+    <div class="pointer-wrap">
+      <svg class="pointer-svg" width="30" height="38" viewBox="0 0 30 38">
+        <polygon points="15,38 0,0 30,0" fill="#003F76"/>
+        <polygon points="15,34 3,4 27,4" fill="#1877F2"/>
+      </svg>
+    </div>
+    <div class="canvas-wrap">
+      <canvas id="wheelCanvas" width="460" height="460"></canvas>
+    </div>
+  </div>
+
+  <button class="spin-btn" id="spinBtn" onclick="startSpin()">Spin</button>
+
+  <!-- Admin Settings (hidden until authenticated) -->
+  <div class="settings-card" id="settingsCard" style="display:none">
+    <div class="settings-hd" onclick="toggleSettings()">
+      <h3>⚙ Prize Settings</h3>
+      <svg class="chevron" id="chevron" viewBox="0 0 24 24">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </div>
+    <div class="settings-bd open" id="settingsBd">
+      <div class="settings-actions">
+        <button class="btn-add"   onclick="addPrize()">+ Add Prize</button>
+        <button class="btn-reset" onclick="resetPrizes()">Reset Default</button>
+      </div>
+      <!-- Column labels -->
+      <div class="list-header">
+        <span class="lh-num">#</span>
+        <span class="lh-name">Prize Name</span>
+        <span class="lh-wt">Weight</span>
+        <span class="lh-pct">Prob.</span>
+        <span class="lh-del"></span>
+      </div>
+      <div class="prize-list" id="prizeList"></div>
+      <div class="prize-totals" id="prizeTotals"></div>
+      <div class="hint">Min 2 · Max 16 prizes &nbsp;·&nbsp; Higher weight = larger sector &amp; higher chance</div>
+    </div>
+  </div>
+</main>
+
+<!-- Result Modal -->
+<div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-icon">🎉</div>
+    <div class="modal-label">Congratulations! You won</div>
+    <div class="modal-prize" id="modalPrize">—</div>
+    <button class="modal-close" onclick="closeModal()">Awesome!</button>
+  </div>
+</div>
+
+<script>
+/* ── Config ─────────────────────────────────────────
+   Change ADMIN_PASSWORD before distributing the file.
+─────────────────────────────────────────────────── */
+const ADMIN_PASSWORD = "admin123";
+
+const COLORS = [
+  '#003F76', '#1877F2', '#43B149',
+  '#00508E', '#2E8EFF', '#35A03B',
+  '#004FA0', '#5AABFF', '#4AC050',
+  '#00407A', '#1877F2', '#3AAD42',
+];
+
+let prizes  = ['First Prize', 'Second Prize', 'Novi Freebie!'];
+let weights = [10, 25, 65];   /* parallel to prizes[], all equal by default */
+let isAdmin = false;
+let currentAngle = 0;
+let spinning     = false;
+
+/* ── Canvas setup ─────────────────────────────────── */
+const canvas = document.getElementById('wheelCanvas');
+const ctx    = canvas.getContext('2d');
+const CX = canvas.width  / 2;
+const CY = canvas.height / 2;
+const R  = CX - 3;
+
+/* ── Geometry helpers ─────────────────────────────── */
+function computeArcs() {
+  const total = weights.reduce((a, b) => a + b, 0);
+  return weights.map(w => (w / total) * 2 * Math.PI);
+}
+
+function computeStartAngles(arcs) {
+  const starts = [];
+  let acc = currentAngle;
+  for (const a of arcs) { starts.push(acc); acc += a; }
+  return starts;
+}
+
+/* ── Draw wheel ───────────────────────────────────── */
+function drawWheel(highlightIdx = -1) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const n      = prizes.length;
+  const arcs   = computeArcs();
+  const starts = computeStartAngles(arcs);
+
+  /* Sectors */
+  for (let i = 0; i < n; i++) {
+    ctx.beginPath();
+    ctx.moveTo(CX, CY);
+    ctx.arc(CX, CY, R, starts[i], starts[i] + arcs[i]);
+    ctx.closePath();
+    ctx.fillStyle = (i === highlightIdx) ? '#FFD700' : COLORS[i % COLORS.length];
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.lineWidth   = 2.5;
+    ctx.stroke();
+  }
+
+  /* Outer ring */
+  ctx.beginPath();
+  ctx.arc(CX, CY, R, 0, 2 * Math.PI);
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+  ctx.lineWidth   = 4;
+  ctx.stroke();
+
+  /* Labels */
+  for (let i = 0; i < n; i++) {
+    drawLabel(prizes[i], starts[i] + arcs[i] / 2, i === highlightIdx, arcs[i]);
+  }
+
+  /* Center circle */
+  ctx.beginPath();
+  ctx.arc(CX, CY, 22, 0, 2 * Math.PI);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,63,118,0.18)';
+  ctx.lineWidth   = 2.5;
+  ctx.stroke();
+
+  /* Center dot */
+  ctx.beginPath();
+  ctx.arc(CX, CY, 8, 0, 2 * Math.PI);
+  ctx.fillStyle = '#003F76';
+  ctx.fill();
+}
+
+function drawLabel(text, midAngle, isHighlight, arcSize) {
+  if (arcSize < 0.18) return;   /* too narrow for text */
+
+  ctx.save();
+  ctx.translate(CX, CY);
+  ctx.rotate(midAngle);
+
+  const fs = arcSize > 1.2 ? 17
+           : arcSize > 0.8 ? 15
+           : arcSize > 0.5 ? 13 : 11;
+
+  ctx.font         = `700 ${fs}px 'Segoe UI', Arial, sans-serif`;
+  ctx.fillStyle    = isHighlight ? '#003F76' : '#ffffff';
+  ctx.textBaseline = 'middle';
+  ctx.textAlign    = 'center';
+
+  const textR = R * 0.60;
+  const maxW  = R * 0.55;
+  const lines = splitLines(ctx, text, maxW);
+  const lineH = fs + 4;
+  const totalH = lines.length * lineH;
+
+  lines.forEach((ln, li) => {
+    ctx.fillText(ln, textR, -totalH / 2 + li * lineH + lineH / 2);
+  });
+
+  ctx.restore();
+}
+
+function splitLines(ctx, text, maxW) {
+  if (ctx.measureText(text).width <= maxW) return [text];
+  const words = text.split(' ');
+  if (words.length >= 2) {
+    const mid = Math.ceil(words.length / 2);
+    const l1 = words.slice(0, mid).join(' ');
+    const l2 = words.slice(mid).join(' ');
+    if (ctx.measureText(l1).width <= maxW && ctx.measureText(l2).width <= maxW) return [l1, l2];
+  }
+  const mid = Math.ceil(text.length / 2);
+  return [text.slice(0, mid), text.slice(mid)];
+}
+
+/* ── Weighted random ──────────────────────────────── */
+function weightedRandom() {
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < weights.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return i;
+  }
+  return weights.length - 1;
+}
+
+/* ── Read winner from final angle ─────────────────── */
+function getWinnerFromAngle() {
+  const arcs   = computeArcs();
+  const offset = ((-Math.PI / 2 - currentAngle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+  let acc = 0;
+  for (let i = 0; i < arcs.length; i++) {
+    acc += arcs[i];
+    if (offset < acc) return i;
+  }
+  return arcs.length - 1;
+}
+
+/* ── Spin logic ───────────────────────────────────── */
+function startSpin() {
+  if (spinning) return;
+  spinning = true;
+  document.getElementById('spinBtn').disabled = true;
+
+  /* 1. Pick winner with weighted probability */
+  const winnerIdx = weightedRandom();
+
+  /* 2. Compute the winner's sector angular bracket (wheel-local coords) */
+  const arcs = computeArcs();
+  let sectorStart = 0;
+  for (let i = 0; i < winnerIdx; i++) sectorStart += arcs[i];
+  const PAD         = arcs[winnerIdx] * 0.05;   /* 5% padding from edges */
+  const localTarget = sectorStart + PAD + Math.random() * (arcs[winnerIdx] - 2 * PAD);
+
+  /* 3. Calculate the final currentAngle that places localTarget under the pointer (−π/2) */
+  const baseEnd = -Math.PI / 2 - localTarget;
+  const delta   = ((baseEnd - currentAngle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+  const endA    = currentAngle + (3 + Math.floor(Math.random() * 3)) * 2 * Math.PI + delta;
+
+  const startA   = currentAngle;
+  const duration = 4200 + Math.random() * 1400;
+  const t0       = performance.now();
+
+  function animate(now) {
+    const t      = Math.min((now - t0) / duration, 1);
+    const eased  = 1 - Math.pow(1 - t, 3);     /* ease-out cubic */
+    currentAngle = startA + (endA - startA) * eased;
+    drawWheel();
+    if (t < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      currentAngle = endA;
+      spinning     = false;
+      document.getElementById('spinBtn').disabled = false;
+      /* Verify from actual final angle (float-drift safety) */
+      const verified = getWinnerFromAngle();
+      drawWheel(verified);
+      setTimeout(() => showResult(prizes[verified]), 320);
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+/* ── Modal ────────────────────────────────────────── */
+function showResult(name) {
+  document.getElementById('modalPrize').textContent = name;
+  document.getElementById('overlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('overlay').classList.remove('show');
+}
+
+function handleOverlayClick(e) {
+  if (e.target.id === 'overlay') closeModal();
+}
+
+/* ── Admin authentication ─────────────────────────── */
+function handleLockClick() {
+  if (isAdmin) {
+    exitAdmin();
+  } else {
+    const prompt = document.getElementById('pwPrompt');
+    const wasShown = prompt.classList.contains('show');
+    if (wasShown) {
+      closePwPrompt();
+    } else {
+      prompt.classList.add('show');
+      document.getElementById('pwInput').value = '';
+      document.getElementById('pwError').textContent = '';
+      document.getElementById('pwInput').focus();
+    }
+  }
+}
+
+function checkPassword() {
+  const val    = document.getElementById('pwInput').value;
+  const prompt = document.getElementById('pwPrompt');
+  if (val === ADMIN_PASSWORD) {
+    closePwPrompt();
+    enterAdmin();
+  } else {
+    document.getElementById('pwError').textContent = 'Wrong password';
+    prompt.classList.remove('shake');
+    void prompt.offsetWidth;   /* force reflow to restart animation */
+    prompt.classList.add('shake');
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+    setTimeout(() => {
+      document.getElementById('pwError').textContent = '';
+    }, 1800);
+  }
+}
+
+function closePwPrompt() {
+  const prompt = document.getElementById('pwPrompt');
+  prompt.classList.remove('show', 'shake');
+}
+
+function enterAdmin() {
+  isAdmin = true;
+  document.getElementById('spinBtn').classList.add('hidden');
+  document.getElementById('settingsCard').style.display = '';
+  /* Open the panel by default */
+  document.getElementById('settingsBd').classList.add('open');
+  document.getElementById('chevron').classList.add('open');
+  /* Update lock button */
+  const lb = document.getElementById('lockBtn');
+  lb.textContent = 'Exit Admin';
+  lb.classList.add('admin-mode');
+  renderPrizeList();
+}
+
+function exitAdmin() {
+  isAdmin = false;
+  document.getElementById('spinBtn').classList.remove('hidden');
+  document.getElementById('settingsCard').style.display = 'none';
+  const lb = document.getElementById('lockBtn');
+  lb.textContent = '🔒';
+  lb.classList.remove('admin-mode');
+}
+
+/* ── Settings panel ───────────────────────────────── */
+function toggleSettings() {
+  const bd      = document.getElementById('settingsBd');
+  const chevron = document.getElementById('chevron');
+  const open    = bd.classList.toggle('open');
+  chevron.classList.toggle('open', open);
+}
+
+function renderPrizeList() {
+  const list  = document.getElementById('prizeList');
+  list.innerHTML = '';
+  const total = weights.reduce((a, b) => a + b, 0);
+
+  prizes.forEach((p, i) => {
+    const item = document.createElement('div');
+    item.className = 'prize-item';
+
+    /* Color dot */
+    const dot = document.createElement('div');
+    dot.className = 'color-dot';
+    dot.style.background = COLORS[i % COLORS.length];
+
+    /* Row number */
+    const num = document.createElement('span');
+    num.className   = 'prize-num';
+    num.textContent = i + 1;
+
+    /* Name input */
+    const inp = document.createElement('input');
+    inp.type        = 'text';
+    inp.className   = 'name-inp';
+    inp.value       = p;
+    inp.placeholder = 'Prize name…';
+    inp.maxLength   = 28;
+    inp.addEventListener('input', () => {
+      prizes[i] = inp.value || '(empty)';
+      drawWheel();
+    });
+
+    /* Weight input */
+    const wWrap = document.createElement('div');
+    wWrap.className = 'weight-wrap';
+
+    const wLabel = document.createElement('span');
+    wLabel.className   = 'wt-label';
+    wLabel.textContent = 'Wt';
+
+    const wInp = document.createElement('input');
+    wInp.type      = 'number';
+    wInp.className = 'weight-inp';
+    wInp.min       = '1';
+    wInp.max       = '999';
+    wInp.value     = weights[i];
+    wInp.addEventListener('change', () => {
+      let v = parseInt(wInp.value, 10);
+      if (isNaN(v) || v < 1) v = 1;
+      if (v > 999)            v = 999;
+      wInp.value  = v;
+      weights[i]  = v;
+      renderPrizeList();
+      drawWheel();
+    });
+
+    wWrap.append(wLabel, wInp);
+
+    /* Probability % */
+    const pct = document.createElement('span');
+    pct.className   = 'prob-pct';
+    pct.textContent = ((weights[i] / total) * 100).toFixed(1) + '%';
+
+    /* Delete button */
+    const del = document.createElement('button');
+    del.className   = 'del-btn';
+    del.textContent = '×';
+    del.title       = 'Remove';
+    del.onclick = () => {
+      if (prizes.length <= 2) { alert('At least 2 prizes required.'); return; }
+      prizes.splice(i, 1);
+      weights.splice(i, 1);
+      renderPrizeList();
+      drawWheel();
+    };
+
+    item.append(dot, num, inp, wWrap, pct, del);
+    list.appendChild(item);
+  });
+
+  renderPrizeTotals();
+}
+
+function renderPrizeTotals() {
+  const el    = document.getElementById('prizeTotals');
+  const total = weights.reduce((a, b) => a + b, 0);
+  el.innerHTML =
+    `<span>Total weight: <strong>${total}</strong></span>` +
+    `<span>All prizes sum to <strong>100%</strong></span>`;
+}
+
+function addPrize() {
+  if (prizes.length >= 16) { alert('Maximum 16 prizes allowed.'); return; }
+  prizes.push('New Prize');
+  weights.push(1);
+  renderPrizeList();
+  drawWheel();
+  document.getElementById('prizeList').scrollTop = 99999;
+}
+
+function resetPrizes() {
+  prizes   = ['1st Prize', '2nd Prize', '3rd Prize', 'Lucky Prize', 'Special Prize', 'Thank You'];
+  weights  = [1, 1, 1, 1, 1, 1];
+  currentAngle = 0;
+  renderPrizeList();
+  drawWheel();
+}
+
+/* ── Keyboard shortcuts ───────────────────────────── */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeModal();
+    closePwPrompt();
+  }
+});
+
+/* ── Responsive canvas ────────────────────────────── */
+function resizeCanvas() {
+  const w = Math.min(window.innerWidth - 56, 460);
+  canvas.style.width  = w + 'px';
+  canvas.style.height = w + 'px';
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+/* ── Init ─────────────────────────────────────────── */
+drawWheel();
+</script>
+</body>
+</html>
