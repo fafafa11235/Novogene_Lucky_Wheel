@@ -150,15 +150,26 @@
 
     .pw-prompt.shake { animation: shake 0.4s ease; }
 
+    /* ── Page body wrapper (left panel + main + right panel) ── */
+    .page-body {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      width: 100%;
+      max-width: 1280px;
+      padding: 0 20px 40px;
+      gap: 28px;
+    }
+
     /* ── Main ─────────────────────────────────────── */
     main {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 0 20px 40px;
       gap: 26px;
       width: 100%;
-      max-width: 580px;
+      max-width: 560px;
+      flex-shrink: 0;
     }
 
     /* ── Wheel area ─────────────────────────────────── */
@@ -463,6 +474,193 @@
       text-align: center;
     }
 
+    /* ── Left panel (Prize Details) ─────────────────── */
+    .left-panel {
+      width: 280px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 24px;
+    }
+
+    /* ── Right panel (Mini Poster) ───────────────────── */
+    .right-panel {
+      width: 300px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 24px;
+    }
+
+    /* ── Mini Poster ──────────────────────────────────── */
+    .sidebar-poster {
+      background: #003F76;
+      border-radius: 16px;
+      padding: 36px 28px 30px;
+      color: white;
+      height: 100%;
+    }
+
+    .poster-eyebrow {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 14px;
+    }
+
+    .poster-headline {
+      font-size: 2.6rem;
+      font-weight: 900;
+      line-height: 1.15;
+      color: white;
+    }
+
+    .poster-headline span {
+      color: #43B149;
+      display: block;
+      font-size: 3rem;
+    }
+
+    .poster-divider {
+      height: 3px;
+      background: linear-gradient(90deg, #1877F2, #43B149);
+      border-radius: 2px;
+      margin: 22px 0;
+    }
+
+    .poster-body {
+      font-size: 0.88rem;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .poster-badge {
+      margin-top: 22px;
+      display: inline-block;
+      background: #1877F2;
+      color: white;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      padding: 7px 18px;
+      border-radius: 24px;
+    }
+
+    /* ── Prize Details card ───────────────────────────── */
+    .sidebar-prizes {
+      background: white;
+      border-radius: 16px;
+      border: 1.5px solid #eef1f6;
+      overflow: hidden;
+    }
+
+    .sidebar-prizes-hd {
+      padding: 14px 20px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #003F76;
+      background: #f7f9ff;
+      border-bottom: 1px solid #eef1f6;
+    }
+
+    .sidebar-prizes-list { padding: 6px 0; }
+
+    .sidebar-prize-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 20px;
+    }
+
+    .sidebar-prize-row + .sidebar-prize-row {
+      border-top: 1px solid #f0f4f8;
+    }
+
+    .sidebar-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .sidebar-prize-info { display: flex; flex-direction: column; gap: 4px; }
+
+    .sidebar-prize-name {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #003F76;
+    }
+
+    .sidebar-prize-desc {
+      font-size: 1rem;
+      color: #555;
+      line-height: 1.45;
+    }
+
+    /* Leave-details hint */
+    .leave-details-hint {
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #1877F2;
+      color: white;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      padding: 13px 18px;
+      border-radius: 12px;
+    }
+
+    .hint-arrow { font-size: 1.1rem; flex-shrink: 0; }
+
+    /* Admin panel: description input */
+    .prize-item .desc-inp {
+      flex: 1.4;
+      border: none;
+      border-left: 1.5px solid #eef1f6;
+      padding-left: 8px;
+      background: transparent;
+      outline: none;
+      font-size: 0.8rem;
+      color: #555;
+      font-family: inherit;
+      min-width: 0;
+    }
+
+    .prize-item .desc-inp::placeholder { color: #ccc; }
+
+    .lh-desc {
+      flex: 1.4;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #aab;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Responsive ───────────────────────────────────── */
+    @media (max-width: 960px) {
+      .page-body {
+        flex-direction: column;
+        align-items: center;
+        padding: 0 16px 32px;
+        gap: 16px;
+      }
+
+      .left-panel, .right-panel {
+        width: 100%;
+        max-width: 520px;
+        position: static;
+      }
+
+      .poster-headline { font-size: 2rem; }
+      .poster-headline span { font-size: 2.4rem; }
+    }
+
     /* ── Result Modal ─────────────────────────────────── */
     .overlay {
       display: none;
@@ -525,7 +723,7 @@
 <body>
 
 <header>
-  <div class="title">Novogene <em>Lucky Wheel</em></div>
+  <div class="title">Novogene <em>Plasmid Lucky Wheel</em></div>
   <div class="subtitle">Spin &amp; Win</div>
 
   <!-- Admin lock button -->
@@ -540,6 +738,19 @@
     <span class="pw-error" id="pwError"></span>
   </div>
 </header>
+
+<div class="page-body">
+
+<!-- LEFT: Prize Details -->
+<aside class="left-panel">
+  <div class="sidebar-prizes">
+    <div class="sidebar-prizes-hd">Prize Details</div>
+    <div class="sidebar-prizes-list" id="sidebarPrizeList"></div>
+  </div>
+  <div class="leave-details-hint">
+    <span>Leave your details to spin the wheel!</span>
+  </div>
+</aside>
 
 <main>
   <!-- Wheel -->
@@ -574,6 +785,7 @@
       <div class="list-header">
         <span class="lh-num">#</span>
         <span class="lh-name">Prize Name</span>
+        <span class="lh-desc">Description</span>
         <span class="lh-wt">Weight</span>
         <span class="lh-pct">Prob.</span>
         <span class="lh-del"></span>
@@ -584,6 +796,22 @@
     </div>
   </div>
 </main>
+
+<!-- RIGHT: Mini Poster -->
+<aside class="right-panel">
+  <div class="sidebar-poster">
+    <div class="poster-eyebrow">Novogene Plasmid Service</div>
+    <div class="poster-headline">Spin the Wheel for<br><span>Plasmid Prizes</span></div>
+    <div class="poster-divider"></div>
+    <div class="poster-body">
+      Try your luck and win exclusive Plasmid rewards — sequencing samples,
+      discounts &amp; surprise freebies!
+    </div>
+    <div class="poster-badge">🎡 Free to Play</div>
+  </div>
+</aside>
+
+</div><!-- /.page-body -->
 
 <!-- Result Modal -->
 <div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
@@ -608,8 +836,13 @@ const COLORS = [
   '#00407A', '#1877F2', '#3AAD42',
 ];
 
-let prizes  = ['First Prize', 'Second Prize', 'Novi Freebie!'];
-let weights = [10, 25, 65];   /* parallel to prizes[], all equal by default */
+let prizes       = ['First Prize', 'Second Prize', 'Novogene Freebie'];
+let weights      = [10, 25, 65];
+let descriptions = [
+  '12 free Plasmid samples',
+  '12 Plasmid samples with 50% discount',
+  'Freebies'
+];
 let isAdmin = false;
 let currentAngle = 0;
 let spinning     = false;
@@ -909,6 +1142,19 @@ function renderPrizeList() {
     inp.addEventListener('input', () => {
       prizes[i] = inp.value || '(empty)';
       drawWheel();
+      renderSidebar();
+    });
+
+    /* Description input */
+    const descInp = document.createElement('input');
+    descInp.type        = 'text';
+    descInp.className   = 'desc-inp';
+    descInp.value       = descriptions[i] || '';
+    descInp.placeholder = 'Prize description…';
+    descInp.maxLength   = 80;
+    descInp.addEventListener('input', () => {
+      descriptions[i] = descInp.value;
+      renderSidebar();
     });
 
     /* Weight input */
@@ -951,11 +1197,13 @@ function renderPrizeList() {
       if (prizes.length <= 2) { alert('At least 2 prizes required.'); return; }
       prizes.splice(i, 1);
       weights.splice(i, 1);
+      descriptions.splice(i, 1);
       renderPrizeList();
       drawWheel();
+      renderSidebar();
     };
 
-    item.append(dot, num, inp, wWrap, pct, del);
+    item.append(dot, num, inp, descInp, wWrap, pct, del);
     list.appendChild(item);
   });
 
@@ -974,17 +1222,55 @@ function addPrize() {
   if (prizes.length >= 16) { alert('Maximum 16 prizes allowed.'); return; }
   prizes.push('New Prize');
   weights.push(1);
+  descriptions.push('');
   renderPrizeList();
   drawWheel();
+  renderSidebar();
   document.getElementById('prizeList').scrollTop = 99999;
 }
 
 function resetPrizes() {
-  prizes   = ['1st Prize', '2nd Prize', '3rd Prize', 'Lucky Prize', 'Special Prize', 'Thank You'];
-  weights  = [1, 1, 1, 1, 1, 1];
+  prizes       = ['First Prize', 'Second Prize', 'Novi Freebie!'];
+  weights      = [10, 25, 65];
+  descriptions = [
+    '12 free Plasmid samples',
+    '12 Plasmid samples with 50% discount',
+    'Freebies'
+  ];
   currentAngle = 0;
   renderPrizeList();
   drawWheel();
+  renderSidebar();
+}
+
+/* ── Sidebar prize list ───────────────────────────── */
+function renderSidebar() {
+  const container = document.getElementById('sidebarPrizeList');
+  if (!container) return;
+  container.innerHTML = '';
+  prizes.forEach((name, i) => {
+    const row = document.createElement('div');
+    row.className = 'sidebar-prize-row';
+
+    const dot = document.createElement('div');
+    dot.className = 'sidebar-dot';
+    dot.style.background = COLORS[i % COLORS.length];
+
+    const info = document.createElement('div');
+    info.className = 'sidebar-prize-info';
+
+    const nameEl = document.createElement('div');
+    nameEl.className   = 'sidebar-prize-name';
+    nameEl.textContent = name;
+
+    const descEl = document.createElement('div');
+    descEl.className   = 'sidebar-prize-desc';
+    descEl.textContent = descriptions[i] || '';
+
+    info.append(nameEl, descEl);
+    row.append(dot, info);
+    container.appendChild(row);
+  });
 }
 
 /* ── Keyboard shortcuts ───────────────────────────── */
@@ -1007,6 +1293,7 @@ resizeCanvas();
 
 /* ── Init ─────────────────────────────────────────── */
 drawWheel();
+renderSidebar();
 </script>
 </body>
 </html>
